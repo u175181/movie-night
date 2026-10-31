@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Night Log</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Movie Night">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-soft:#2A3444;
+    --paper:#F7F3EA;
+    --paper-dim:#EDE7D8;
+    --marquee:#E3A857;
+    --marquee-dark:#B87F32;
+    --liked:#5F8558;
+    --liked-bg:#E7EFE1;
+    --disliked:#AE5148;
+    --disliked-bg:#F5E4E1;
+    --mixed:#7C7460;
+    --mixed-bg:#EFEAE0;
+    --line:rgba(27,36,48,0.12);
+    --shadow:0 2px 10px rgba(27,36,48,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    font-family:'Work Sans',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .marquee{
+    background:var(--ink);
+    background-image:radial-gradient(circle at 15% 20%, rgba(227,168,87,0.08), transparent 40%),
+                      radial-gradient(circle at 85% 0%, rgba(227,168,87,0.06), transparent 45%);
+    padding:32px 20px 24px;
+    text-align:center;
+    border-bottom:3px solid var(--marquee);
+  }
+  .marquee h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,7vw,40px);
+    color:var(--paper);
+    margin:0;
+    letter-spacing:0.3px;
+  }
+  .marquee p{
+    color:var(--marquee);
+    font-size:14px;
+    margin:6px 0 0;
+    font-style:italic;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    background:var(--paper);
+    min-height:100vh;
+    padding:20px 18px 80px;
+  }
+  .card{
+    background:#fff;
+    border-radius:10px;
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:12px 0 4px;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-family:inherit;
+    font-size:15px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:54px;}
+  .row2{display:flex; gap:10px;}
+  .row2 > div{flex:1;}
+  .verdict-group{display:flex; gap:8px; margin-top:4px;}
+  .verdict-btn{
+    flex:1;
+    padding:9px 4px;
+    border-radius:7px;
+    border:1.5px solid var(--line);
+    background:var(--paper);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:center;
+  }
+  .verdict-btn.active[data-v="liked"]{background:var(--liked-bg); border-color:var(--liked); color:var(--liked);}
+  .verdict-btn.active[data-v="disliked"]{background:var(--disliked-bg); border-color:var(--disliked); color:var(--disliked);}
+  .verdict-btn.active[data-v="mixed"]{background:var(--mixed-bg); border-color:var(--mixed); color:var(--mixed);}
+  .type-btn.active{background:var(--paper-dim); border-color:var(--ink-soft); color:var(--ink);}
+  #carterGroup .verdict-btn, #sharonGroup .verdict-btn{padding:8px 2px; font-size:12px;}
+  .verdict-btn.active[data-v=""]{background:var(--paper-dim); border-color:var(--ink-soft); color:var(--ink-soft);}
+  .type-tag{
+    display:inline-block; font-size:11px; font-weight:600; color:var(--ink-soft);
+    background:var(--paper-dim); padding:2px 8px; border-radius:20px; margin-right:6px;
+  }
+  .dub-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    font-size:14px;
+  }
+  .dub-row input{width:auto;}
+  .btn{
+    display:inline-block;
+    padding:11px 18px;
+    border-radius:8px;
+    border:none;
+    font-family:inherit;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--marquee); color:var(--ink); width:100%; margin-top:16px;}
+  .btn-primary:active{background:var(--marquee-dark);}
+  .btn-ghost{background:transparent; border:1.5px solid var(--line); color:var(--ink-soft);}
+  .toolbar{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    padding:6px 13px;
+    border-radius:20px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .chip.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .search{margin-bottom:14px;}
+  .entry{
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:13px 14px;
+    margin-bottom:10px;
+    background:#fff;
+    position:relative;
+  }
+  .entry-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .entry-title{font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin:0;}
+  .entry-meta{font-size:12.5px; color:var(--ink-soft); opacity:0.75; margin-top:2px;}
+  .badge{
+    font-size:11px;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .badge.liked{background:var(--liked-bg); color:var(--liked);}
+  .badge.disliked{background:var(--disliked-bg); color:var(--disliked);}
+  .badge.mixed{background:var(--mixed-bg); color:var(--mixed);}
+  .person-tag{
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap;
+    display:inline-block; margin-right:6px; margin-top:6px;
+  }
+  .person-tag.liked{background:var(--liked-bg); color:var(--liked);}
+  .person-tag.disliked{background:var(--disliked-bg); color:var(--disliked);}
+  .person-tag.mixed{background:var(--mixed-bg); color:var(--mixed);}
+  .person-tag.none{background:var(--paper-dim); color:var(--ink-soft);}
+  .dub-tag{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    color:var(--marquee-dark);
+    background:#FBF0DE;
+    padding:2px 8px;
+    border-radius:20px;
+    margin-top:6px;
+  }
+  .entry-notes{font-size:13.5px; margin-top:8px; color:var(--ink-soft); line-height:1.5;}
+  .entry-actions{display:flex; gap:12px; margin-top:10px;}
+  .link-btn{
+    background:none; border:none; padding:0; font-size:12.5px; font-weight:600;
+    color:var(--ink-soft); text-decoration:underline; cursor:pointer;
+  }
+  .empty{text-align:center; padding:30px 10px; color:var(--ink-soft);}
+  .empty .emoji{font-size:34px;}
+  .stat-row{display:flex; gap:10px; margin-bottom:16px;}
+  .stat{
+    flex:1; background:#fff; border:1px solid var(--line); border-radius:9px;
+    padding:10px; text-align:center;
+  }
+  .stat .num{font-family:'Fraunces',serif; font-size:22px; font-weight:600;}
+  .stat .lbl{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.4px;}
+  .err{color:var(--disliked); font-size:13px; margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="marquee">
+  <h1>&#127916; Movie &amp; TV Night Log</h1>
+  <p>Legacy Woodworks &amp; Beyond presents: what we watched, and whether it was worth the popcorn</p>
+</div>
+
+<div class="wrap">
+
+  <div id="syncStatus" style="font-size:12px; text-align:right; color:var(--ink-soft); margin:-6px 2px 8px;">Connecting...</div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="card">
+    <h2>&#128221; Notes for both of us</h2>
+    <textarea id="householdNotes" placeholder="Movies to look up later, running arguments about ratings, whatever's useful..." style="min-height:80px;"></textarea>
+    <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+      <button class="btn btn-ghost" id="saveNotesBtn">Save notes</button>
+      <span id="notesSavedMsg" style="font-size:12.5px; color:var(--liked); display:none;">Saved</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="formTitle">Log a movie</h2>
+    <label>Type</label>
+    <div class="verdict-group" id="typeGroup">
+      <button type="button" class="verdict-btn type-btn" data-t="movie">&#127916; Movie</button>
+      <button type="button" class="verdict-btn type-btn" data-t="tv">&#128250; TV show</button>
+    </div>
+    <label>Title *</label>
+    <input type="text" id="fTitle" placeholder="What did you watch?">
+    <div class="row2">
+      <div>
+        <label>Year</label>
+        <input type="number" id="fYear" placeholder="2024">
+      </div>
+      <div>
+        <label>Date watched</label>
+        <input type="date" id="fDate">
+      </div>
+    </div>
+    <label>Genre / tags</label>
+    <input type="text" id="fGenre" placeholder="comedy, heist, animated...">
+    <label>Carter's take</label>
+    <div class="dub-row" style="margin-top:0;">
+      <input type="checkbox" id="carterWatched" checked>
+      <label style="margin:0; text-transform:none; font-weight:500; font-size:14px;" for="carterWatched">Carter watched this</label>
+    </div>
+    <div class="verdict-group" id="carterGroup">
+      <button type="button" class="verdict-btn person-btn" data-person="carter" data-v="liked">&#128077; Liked</button>
+      <button type="button" class="verdict-btn person-btn" data-person="carter" data-v="disliked">&#128078; Disliked</button>
+      <button type="button" class="verdict-btn person-btn" data-person="carter" data-v="mixed">&#129300; Mixed</button>
+      <button type="button" class="verdict-btn person-btn" data-person="carter" data-v="">&#8212;</button>
+    </div>
+    <label>Sharon's take</label>
+    <div class="dub-row" style="margin-top:0;">
+      <input type="checkbox" id="sharonWatched" checked>
+      <label style="margin:0; text-transform:none; font-weight:500; font-size:14px;" for="sharonWatched">Sharon watched this</label>
+    </div>
+    <div class="verdict-group" id="sharonGroup">
+      <button type="button" class="verdict-btn person-btn" data-person="sharon" data-v="liked">&#128077; Liked</button>
+      <button type="button" class="verdict-btn person-btn" data-person="sharon" data-v="disliked">&#128078; Disliked</button>
+      <button type="button" class="verdict-btn person-btn" data-person="sharon" data-v="mixed">&#129300; Mixed</button>
+      <button type="button" class="verdict-btn person-btn" data-person="sharon" data-v="">&#8212;</button>
+    </div>
+    <div class="dub-row">
+      <input type="checkbox" id="fDubbed">
+      <label style="margin:0; text-transform:none; font-weight:500; font-size:14px;" for="fDubbed">Voices were dubbed</label>
+    </div>
+    <input type="text" id="fDubLang" placeholder="Dubbed into which language? (optional)" style="margin-top:8px; display:none;">
+    <label>Notes</label>
+    <textarea id="fNotes" placeholder="Any thoughts, quotes, or reasons it flopped..."></textarea>
+    <div id="formErr" class="err" style="display:none;"></div>
+    <button class="btn btn-primary" id="saveBtn">Save entry</button>
+  </div>
+
+  <div class="card">
+    <h2>The log</h2>
+    <input type="text" class="search" id="searchBox" placeholder="Search titles or genres...">
+    <div class="toolbar" id="filterBar">
+      <button class="chip active" data-f="all">All</button>
+      <button class="chip" data-f="dubbed">Dubbed</button>
+      <button class="chip" data-f="movie">Movies</button>
+      <button class="chip" data-f="tv">TV shows</button>
+    </div>
+    <label>Filter by rating</label>
+    <select id="ratingFilter">
+      <option value="all">Everyone, any rating</option>
+      <option value="carter-liked">Carter liked</option>
+      <option value="carter-disliked">Carter disliked</option>
+      <option value="sharon-liked">Sharon liked</option>
+      <option value="sharon-disliked">Sharon disliked</option>
+      <option value="both-liked">Both liked</option>
+      <option value="disagree">They disagreed</option>
+    </select>
+    <label>Filter by who watched</label>
+    <select id="watchedFilter">
+      <option value="all">Anyone</option>
+      <option value="both">Both watched</option>
+      <option value="carter-only">Only Carter watched</option>
+      <option value="sharon-only">Only Sharon watched</option>
+      <option value="carter-any">Carter watched (with or without Sharon)</option>
+      <option value="sharon-any">Sharon watched (with or without Carter)</option>
+    </select>
+    <div class="toolbar" id="sortBar">
+      <button class="chip active" data-s="alpha">A to Z</button>
+      <button class="chip" data-s="recent">Most recent</button>
+    </div>
+    <div id="entryList"></div>
+  </div>
+  <div class="card">
+    <h2>&#128190; Backup</h2>
+    <p style="font-size:13.5px; color:var(--ink-soft); margin-top:-6px;">If the shared log ever doesn't sync between phones, copy this text somewhere safe. You can paste it back in to restore everything.</p>
+    <label>Your backup text</label>
+    <textarea id="backupOut" readonly style="min-height:70px; font-size:12px; font-family:monospace;"></textarea>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="btn btn-ghost" id="copyBackupBtn">Copy backup</button>
+      <span id="copyBackupMsg" style="font-size:12.5px; color:var(--liked); display:none; align-self:center;">Copied</span>
+    </div>
+    <label style="margin-top:18px;">Restore from backup</label>
+    <textarea id="backupIn" placeholder="Paste backup text here" style="min-height:70px; font-size:12px; font-family:monospace;"></textarea>
+    <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+      <button class="btn btn-ghost" id="restoreBackupBtn">Restore from backup</button>
+      <span id="restoreMsg" style="font-size:12.5px; display:none;"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let movies = [];
+let editingId = null;
+let currentVerdict = { carter: 'liked', sharon: 'liked' };
+let currentType = 'movie';
+let currentFilter = 'all';
+let currentRatingFilter = 'all';
+let currentWatchedFilter = 'all';
+let currentSort = 'alpha';
+
+const $ = (id) => document.getElementById(id);
+
+function uid(){ return 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+const SB_URL = 'https://akxvjufalwuwyinllghd.supabase.co';
+const SB_KEY = 'sb_publishable_TuWE97HDqF1z58Wa6dJUJw_Cs8r807g';
+let allMovies = [];
+
+function setSync(msg, bad){
+  const el = $('syncStatus');
+  el.textContent = msg;
+  el.style.color = bad ? 'var(--disliked)' : 'var(--ink-soft)';
+}
+
+async function sbGet(id){
+  const r = await fetch(SB_URL + '/rest/v1/movie_night?id=eq.' + encodeURIComponent(id) + '&select=data', {
+    headers: { 'apikey': SB_KEY }
+  });
+  if(!r.ok) throw new Error('read failed ' + r.status);
+  const rows = await r.json();
+  return rows.length ? rows[0].data : null;
+}
+
+async function sbSet(id, text){
+  const r = await fetch(SB_URL + '/rest/v1/movie_night', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({ id, data: text, updated_at: new Date().toISOString() })
+  });
+  if(!r.ok) throw new Error('save failed ' + r.status);
+}
+
+function mergeLists(a, b){
+  const map = new Map();
+  [...a, ...b].forEach(m=>{
+    const cur = map.get(m.id);
+    if(!cur || (m.updatedAt||0) > (cur.updatedAt||0)) map.set(m.id, m);
+  });
+  return Array.from(map.values());
+}
+
+function normalize(m){
+  if(m.carterVerdict===undefined) m.carterVerdict = m.verdict || '';
+  if(m.sharonVerdict===undefined) m.sharonVerdict = m.verdict || '';
+  if(m.carterWatched===undefined) m.carterWatched = true;
+  if(m.sharonWatched===undefined) m.sharonWatched = true;
+  return m;
+}
+
+function setAll(arr){
+  allMovies = arr.map(normalize);
+  movies = allMovies.filter(m=>!m.deleted);
+}
+
+async function fetchRemoteMovies(){
+  const raw = await sbGet('movie-log');
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function loadMovies(){
+  try{
+    const remote = await fetchRemoteMovies();
+    setAll(mergeLists(remote, allMovies));
+    setSync('Synced');
+  }catch(e){
+    console.error(e);
+    setSync('Cannot reach the shared log. Check your connection.', true);
+  }
+  render();
+}
+
+async function saveMovies(){
+  try{
+    const remote = await fetchRemoteMovies();
+    const merged = mergeLists(remote, allMovies);
+    await sbSet('movie-log', JSON.stringify(merged));
+    setAll(merged);
+    setSync('Synced');
+    return true;
+  }catch(e){
+    console.error(e);
+    setSync('Could not save. Check your connection and try again.', true);
+    return false;
+  }
+}
+
+function resetForm(){
+  editingId = null;
+  $('formTitle').textContent = 'Log a movie';
+  $('fTitle').value = '';
+  $('fYear').value = '';
+  $('fDate').value = new Date().toISOString().slice(0,10);
+  $('fGenre').value = '';
+  $('fNotes').value = '';
+  $('fDubbed').checked = false;
+  $('fDubLang').value = '';
+  $('fDubLang').style.display = 'none';
+  currentVerdict = { carter: 'liked', sharon: 'liked' };
+  updateVerdictButtons();
+  $('carterWatched').checked = true;
+  $('sharonWatched').checked = true;
+  syncWatchedState();
+  currentType = 'movie';
+  updateTypeButtons();
+  $('formErr').style.display = 'none';
+  $('saveBtn').textContent = 'Save entry';
+}
+
+function updateVerdictButtons(){
+  document.querySelectorAll('.person-btn').forEach(b=>{
+    const p = b.dataset.person;
+    b.classList.toggle('active', currentVerdict[p] === b.dataset.v);
+  });
+}
+
+document.querySelectorAll('.person-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    currentVerdict[b.dataset.person] = b.dataset.v;
+    updateVerdictButtons();
+  });
+});
+
+function syncWatchedState(){
+  const carterOn = $('carterWatched').checked;
+  const sharonOn = $('sharonWatched').checked;
+  $('carterGroup').style.opacity = carterOn ? '1' : '0.4';
+  $('carterGroup').style.pointerEvents = carterOn ? 'auto' : 'none';
+  $('sharonGroup').style.opacity = sharonOn ? '1' : '0.4';
+  $('sharonGroup').style.pointerEvents = sharonOn ? 'auto' : 'none';
+  if(!carterOn) currentVerdict.carter = '';
+  if(!sharonOn) currentVerdict.sharon = '';
+  updateVerdictButtons();
+}
+
+$('carterWatched').addEventListener('change', syncWatchedState);
+$('sharonWatched').addEventListener('change', syncWatchedState);
+
+function updateTypeButtons(){
+  document.querySelectorAll('.type-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.t === currentType);
+  });
+}
+
+document.querySelectorAll('.type-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    currentType = b.dataset.t;
+    updateTypeButtons();
+  });
+});
+
+$('fDubbed').addEventListener('change', (e)=>{
+  $('fDubLang').style.display = e.target.checked ? 'block' : 'none';
+});
+
+$('saveBtn').addEventListener('click', async ()=>{
+  const title = $('fTitle').value.trim();
+  if(!title){
+    $('formErr').textContent = 'Give it a title before you save.';
+    $('formErr').style.display = 'block';
+    return;
+  }
+  $('formErr').style.display = 'none';
+
+  const entry = {
+    id: editingId || uid(),
+    type: currentType,
+    title,
+    year: $('fYear').value.trim(),
+    date: $('fDate').value || new Date().toISOString().slice(0,10),
+    genre: $('fGenre').value.trim(),
+    carterVerdict: currentVerdict.carter,
+    sharonVerdict: currentVerdict.sharon,
+    carterWatched: $('carterWatched').checked,
+    sharonWatched: $('sharonWatched').checked,
+    dubbed: $('fDubbed').checked,
+    dubLang: $('fDubLang').value.trim(),
+    notes: $('fNotes').value.trim()
+  };
+
+  entry.updatedAt = Date.now();
+  const idx = allMovies.findIndex(m=>m.id===entry.id);
+  if(idx>-1) allMovies[idx] = entry; else allMovies.unshift(entry);
+  await saveMovies();
+  resetForm();
+  render();
+});
+
+function editEntry(id){
+  const m = movies.find(x=>x.id===id);
+  if(!m) return;
+  editingId = id;
+  $('formTitle').textContent = 'Edit entry';
+  currentType = m.type || 'movie';
+  updateTypeButtons();
+  $('fTitle').value = m.title;
+  $('fYear').value = m.year;
+  $('fDate').value = m.date;
+  $('fGenre').value = m.genre;
+  $('fNotes').value = m.notes;
+  $('fDubbed').checked = m.dubbed;
+  $('fDubLang').value = m.dubLang || '';
+  $('fDubLang').style.display = m.dubbed ? 'block' : 'none';
+  currentVerdict = { carter: m.carterVerdict || '', sharon: m.sharonVerdict || '' };
+  $('carterWatched').checked = m.carterWatched !== false;
+  $('sharonWatched').checked = m.sharonWatched !== false;
+  syncWatchedState();
+  updateVerdictButtons();
+  $('saveBtn').textContent = 'Update entry';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteEntry(id){
+  const idx = allMovies.findIndex(m=>m.id===id);
+  if(idx>-1) allMovies[idx] = { id, deleted: true, updatedAt: Date.now() };
+  await saveMovies();
+  render();
+}
+
+document.querySelectorAll('#filterBar .chip').forEach(c=>{
+  c.addEventListener('click', ()=>{
+    currentFilter = c.dataset.f;
+    document.querySelectorAll('#filterBar .chip').forEach(x=>x.classList.toggle('active', x===c));
+    render();
+  });
+});
+
+document.querySelectorAll('#sortBar .chip').forEach(c=>{
+  c.addEventListener('click', ()=>{
+    currentSort = c.dataset.s;
+    document.querySelectorAll('#sortBar .chip').forEach(x=>x.classList.toggle('active', x===c));
+    render();
+  });
+});
+
+$('ratingFilter').addEventListener('change', (e)=>{
+  currentRatingFilter = e.target.value;
+  render();
+});
+
+$('watchedFilter').addEventListener('change', (e)=>{
+  currentWatchedFilter = e.target.value;
+  render();
+});
+
+$('searchBox').addEventListener('input', render);
+
+function personLabel(v, watched){
+  if(watched===false) return "Didn't watch";
+  return v==='liked' ? 'Liked' : v==='disliked' ? 'Disliked' : v==='mixed' ? 'Mixed' : 'No rating yet';
+}
+
+function renderStats(){
+  const carterLiked = movies.filter(m=>m.carterVerdict==='liked').length;
+  const sharonLiked = movies.filter(m=>m.sharonVerdict==='liked').length;
+  const bothLiked = movies.filter(m=>m.carterVerdict==='liked' && m.sharonVerdict==='liked').length;
+  $('statRow').innerHTML = `
+    <div class="stat"><div class="num">${movies.length}</div><div class="lbl">Watched</div></div>
+    <div class="stat"><div class="num">${carterLiked}</div><div class="lbl">Carter liked</div></div>
+    <div class="stat"><div class="num">${sharonLiked}</div><div class="lbl">Sharon liked</div></div>
+    <div class="stat"><div class="num">${bothLiked}</div><div class="lbl">Both liked</div></div>
+  `;
+}
+
+function render(){
+  renderStats();
+  refreshBackupText();
+  const q = $('searchBox').value.trim().toLowerCase();
+  let list = movies.filter(m=>{
+    if(currentFilter==='dubbed' && !m.dubbed) return false;
+    if(['movie','tv'].includes(currentFilter) && (m.type||'movie')!==currentFilter) return false;
+    if(currentRatingFilter==='carter-liked' && m.carterVerdict!=='liked') return false;
+    if(currentRatingFilter==='carter-disliked' && m.carterVerdict!=='disliked') return false;
+    if(currentRatingFilter==='sharon-liked' && m.sharonVerdict!=='liked') return false;
+    if(currentRatingFilter==='sharon-disliked' && m.sharonVerdict!=='disliked') return false;
+    if(currentRatingFilter==='both-liked' && !(m.carterVerdict==='liked' && m.sharonVerdict==='liked')) return false;
+    if(currentRatingFilter==='disagree' && !(m.carterVerdict && m.sharonVerdict && m.carterVerdict!==m.sharonVerdict && m.carterVerdict!=='mixed' && m.sharonVerdict!=='mixed')) return false;
+    if(currentWatchedFilter==='both' && !(m.carterWatched && m.sharonWatched)) return false;
+    if(currentWatchedFilter==='carter-only' && !(m.carterWatched && !m.sharonWatched)) return false;
+    if(currentWatchedFilter==='sharon-only' && !(m.sharonWatched && !m.carterWatched)) return false;
+    if(currentWatchedFilter==='carter-any' && !m.carterWatched) return false;
+    if(currentWatchedFilter==='sharon-any' && !m.sharonWatched) return false;
+    if(q && !(m.title.toLowerCase().includes(q) || (m.genre||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  list = list.slice().sort((a,b)=>{
+    if(currentSort==='alpha') return a.title.localeCompare(b.title, undefined, {sensitivity:'base'});
+    return (b.date||'').localeCompare(a.date||'');
+  });
+
+  if(list.length===0){
+    $('entryList').innerHTML = `<div class="empty"><div class="emoji">&#127871;</div><p>${movies.length===0 ? 'Nothing logged yet. Pop some popcorn and get started.' : 'Nothing matches that filter.'}</p></div>`;
+    return;
+  }
+
+  $('entryList').innerHTML = list.map(m=>`
+    <div class="entry">
+      <div class="entry-top">
+        <div>
+          <p class="entry-title"><span class="type-tag">${(m.type||'movie')==='tv' ? 'TV' : 'Movie'}</span>${escapeHtml(m.title)}${m.year ? ' <span style="font-weight:400; color:var(--ink-soft); font-size:13px;">('+escapeHtml(m.year)+')</span>' : ''}</p>
+          <div class="entry-meta">${m.date || ''}${m.genre ? ' &middot; ' + escapeHtml(m.genre) : ''}</div>
+        </div>
+      </div>
+      <div>
+        <span class="person-tag ${m.carterWatched===false ? 'none' : (m.carterVerdict || 'none')}">Carter: ${personLabel(m.carterVerdict, m.carterWatched)}</span>
+        <span class="person-tag ${m.sharonWatched===false ? 'none' : (m.sharonVerdict || 'none')}">Sharon: ${personLabel(m.sharonVerdict, m.sharonWatched)}</span>
+      </div>
+      ${m.dubbed ? `<span class="dub-tag">Dubbed${m.dubLang ? ' &middot; ' + escapeHtml(m.dubLang) : ''}</span>` : ''}
+      ${m.notes ? `<div class="entry-notes">${escapeHtml(m.notes)}</div>` : ''}
+      <div class="entry-actions">
+        <button class="link-btn" onclick="editEntry('${m.id}')">Edit</button>
+        <button class="link-btn" onclick="deleteEntry('${m.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+async function loadNotes(){
+  try{
+    const txt = await sbGet('household-notes');
+    $('householdNotes').value = txt || '';
+  }catch(e){
+    console.error(e);
+  }
+  refreshBackupText();
+}
+
+$('saveNotesBtn').addEventListener('click', async ()=>{
+  try{
+    await sbSet('household-notes', $('householdNotes').value);
+    refreshBackupText();
+    $('notesSavedMsg').textContent = 'Saved';
+    $('notesSavedMsg').style.color = 'var(--liked)';
+    $('notesSavedMsg').style.display = 'inline';
+    setTimeout(()=>{ $('notesSavedMsg').style.display = 'none'; }, 2000);
+  }catch(e){
+    console.error(e);
+    $('notesSavedMsg').textContent = 'Could not save. Try again.';
+    $('notesSavedMsg').style.color = 'var(--disliked)';
+    $('notesSavedMsg').style.display = 'inline';
+  }
+});
+
+function refreshBackupText(){
+  const payload = {
+    movies,
+    notes: $('householdNotes').value || ''
+  };
+  $('backupOut').value = JSON.stringify(payload);
+}
+
+$('copyBackupBtn').addEventListener('click', async ()=>{
+  refreshBackupText();
+  const text = $('backupOut').value;
+  try{
+    await navigator.clipboard.writeText(text);
+    $('copyBackupMsg').style.display = 'inline';
+    setTimeout(()=>{ $('copyBackupMsg').style.display = 'none'; }, 2000);
+  }catch(e){
+    $('backupOut').select();
+    $('copyBackupMsg').textContent = 'Select and copy manually';
+    $('copyBackupMsg').style.display = 'inline';
+    setTimeout(()=>{ $('copyBackupMsg').style.display = 'none'; $('copyBackupMsg').textContent = 'Copied'; }, 3000);
+  }
+});
+
+$('restoreBackupBtn').addEventListener('click', async ()=>{
+  const raw = $('backupIn').value.trim();
+  const msg = $('restoreMsg');
+  if(!raw){
+    msg.textContent = 'Paste your backup text first.';
+    msg.style.color = 'var(--disliked)';
+    msg.style.display = 'inline';
+    return;
+  }
+  try{
+    const payload = JSON.parse(raw);
+    if(!Array.isArray(payload.movies)) throw new Error('bad format');
+    const stamp = Date.now();
+    const restored = payload.movies.filter(m=>m && m.id && !m.deleted).map(m=>Object.assign({}, m, { updatedAt: stamp }));
+    allMovies = mergeLists(allMovies, restored);
+    const ok = await saveMovies();
+    if(!ok) throw new Error('save failed');
+    $('householdNotes').value = payload.notes || '';
+    await sbSet('household-notes', $('householdNotes').value);
+    render();
+    refreshBackupText();
+    msg.textContent = 'Restored.';
+    msg.style.color = 'var(--liked)';
+    msg.style.display = 'inline';
+    setTimeout(()=>{ msg.style.display = 'none'; }, 2500);
+  }catch(e){
+    msg.textContent = "That doesn't look like a valid backup.";
+    msg.style.color = 'var(--disliked)';
+    msg.style.display = 'inline';
+  }
+});
+
+updateTypeButtons();
+resetForm();
+loadMovies();
+loadNotes();
+
+// Pick up changes from the other phone
+setInterval(async ()=>{
+  if(document.hidden) return;
+  try{
+    const remote = await fetchRemoteMovies();
+    const merged = mergeLists(remote, allMovies);
+    if(JSON.stringify(merged) !== JSON.stringify(allMovies)){
+      setAll(merged);
+      render();
+    }
+    setSync('Synced');
+    if(document.activeElement !== $('householdNotes')){
+      const txt = await sbGet('household-notes');
+      if(txt !== null && txt !== $('householdNotes').value) $('householdNotes').value = txt;
+    }
+  }catch(e){
+    setSync('Cannot reach the shared log. Check your connection.', true);
+  }
+}, 15000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) loadMovies(); });
+</script>
+
+</body>
+</html>
